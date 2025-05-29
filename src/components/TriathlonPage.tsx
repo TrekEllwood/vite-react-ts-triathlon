@@ -13,7 +13,9 @@ export function TriathlonPage() {
     participants,
     averageTime,
     addRace,
+    deleteRace,
     addOrUpdateParticipant,
+    persist,
   } = useTriathlonViewModel()
 
   const [selectedRaceType, setSelectedRaceType] = useState<RaceType | null>(null)
@@ -104,14 +106,17 @@ export function TriathlonPage() {
                   raceParticipantIds={race.getParticipants().map(p => p.id)}
                   onParticipantUpdate={(p) => {
                     addOrUpdateParticipant(p)
+                    persist()
                     refreshRaceCards()
                   }}
                   onParticipantDelete={(id) => {
                     race.getModel().deleteParticipant(id)
+                    persist()
                     refreshRaceCards()
                   }}
                   onAddToRace={(participant) => {
                     race.getModel().addParticipant(participant.getModel())
+                    persist()
                     refreshRaceCards()
                   }}
                 />
@@ -121,9 +126,28 @@ export function TriathlonPage() {
         )}
 
         {/* Race Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* <div className="grid gap-6 md:grid-cols-2">
           {races.map(race => (
             <RaceCard key={`${race.id}-${raceVersion}`} race={race} />
+          ))}
+        </div> */}
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {races.map(race => (
+            <div key={`${race.id}-${raceVersion}`} className="relative">
+              <RaceCard race={race} />
+              <button
+                onClick={() => {
+                  if (window.confirm(`Delete race "${race.name}"?`)) {
+                    deleteRace(race.id)
+                    setRaceVersion(v => v + 1)
+                  }
+                }}
+                className="absolute top-2 right-2 bg-red-900 text-white px-2 py-1 text-sm rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
           ))}
         </div>
 

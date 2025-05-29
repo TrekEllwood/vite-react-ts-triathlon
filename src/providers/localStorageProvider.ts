@@ -2,6 +2,7 @@ import type { IStorageProvider } from '../types/interfaces/storageProvider'
 
 export class LocalStorageProvider implements IStorageProvider {
   save<T>(key: string, data: T): void {
+    // console.log('[LocalStorage] Saving:', key, data) // DEBUG
     localStorage.setItem(key, JSON.stringify(data))
   }
 

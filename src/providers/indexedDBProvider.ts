@@ -13,16 +13,30 @@ export class IndexedDBProvider implements IStorageProvider {
     this.storeName = storeName
   }
 
-  async init(): Promise<IDBPDatabase> {
-    this.db = await openDB(this.dbName, 1, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('TriathlonStore')) {
-          db.createObjectStore('TriathlonStore')
-        }
-      }
-    })
-    return this.db
-  }
+  // async init(): Promise<IDBPDatabase> {
+  //   this.db = await openDB(this.dbName, 1, {
+  //     upgrade(db) {
+  //       if (!db.objectStoreNames.contains('TriathlonStore')) {
+  //         db.createObjectStore('TriathlonStore')
+  //       }
+  //     }
+  //   })
+  //   return this.db
+  // }
+
+  // CHANGE: to handle opening and accessing the db better
+  // private async openDB(): Promise<IDBPDatabase> {
+  //   if (!this.db) {
+  //     this.db = await openDB(this.dbName, 1, {
+  //       upgrade(db) {
+  //         if (!db.objectStoreNames.contains('TriathlonStore')) {
+  //           db.createObjectStore('TriathlonStore')
+  //         }
+  //       }
+  //     })
+  //   }
+  //   return this.db
+  // }
 
   async save<T>(key: string, data: T): Promise<void> {
     const db = await this.openDB()
@@ -56,8 +70,41 @@ export class IndexedDBProvider implements IStorageProvider {
     await indexedDB.deleteDatabase(this.dbName)
   }
 
+  // private async openDB(): Promise<IDBPDatabase> {
+  //   if (this.db) return this.db
+  //   return openDB(this.dbName, 1)
+  // }
+
+  // CHANGE: to handle opening and updating the db better
   private async openDB(): Promise<IDBPDatabase> {
     if (this.db) return this.db
-    return openDB(this.dbName, 1)
+
+    try {
+      this.db = await this.openAndUpgradeDB()
+      return this.db
+    } catch (error) {
+      if ((error as DOMException).name === 'InvalidStateError') {
+        console.warn('[IndexedDBProvider] DB invalid — resetting...')
+        await this.deleteDatabase()
+        this.db = await this.openAndUpgradeDB()
+        return this.db
+      }
+      throw error
+    }
+  }
+
+  // ADDED: Opens the DB and ensures the store exists
+  private async openAndUpgradeDB(): Promise<IDBPDatabase> {
+    return openDB(this.dbName, 1, {
+      upgrade: this.handleUpgrade.bind(this),
+    })
+  }
+
+  // ADDED: Called during upgrade only
+  private handleUpgrade(db: IDBPDatabase): void {
+    if (!db.objectStoreNames.contains(this.storeName)) {
+      console.info(`[IndexedDBProvider] Creating object store: ${this.storeName}`)
+      db.createObjectStore(this.storeName)
+    }
   }
 }
