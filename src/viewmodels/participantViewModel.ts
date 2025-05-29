@@ -4,30 +4,24 @@ import { RaceType } from '../types/raceType'
 
 export type ParticipantViewModel = ReturnType<typeof createParticipantViewModel>
 
-// Pure function — safe to use anywhere
 export function createParticipantViewModel(participant: Participant) {
   return {
     id: participant.id,
-
     fullName: participant.getFullName(),
-
     bibNumber: participant.bibNumber,
 
     // Dynamically calculate total time from model
     getTotalTime: (): string => participant.getTotalTime(),
 
-    // Check if the participant has a result for a specific race type
     hasResultForRaceType: (raceType: RaceType): boolean =>
       participant.results.some(r => r.splitTimes[raceType] !== undefined),
 
-    // Get formatted result time for a given race type
     getFormattedTimeForRaceType: (raceType: RaceType): string => {
       const result = participant.results.find(r => r.splitTimes[raceType] !== undefined)
       const seconds = result?.splitTimes?.[raceType]
       return seconds !== undefined ? TimeUtils.formatTime(seconds) : '—'
     },
 
-    // Add a result to the participant
     addResultForRaceType: (
       raceType: RaceType,
       hours: string,
@@ -44,7 +38,7 @@ export function createParticipantViewModel(participant: Participant) {
       participant.updateFinishTime()
     },
 
-    // Expose the raw model if needed
+    // Expose the raw model
     getModel: (): Participant => participant
   }
 }

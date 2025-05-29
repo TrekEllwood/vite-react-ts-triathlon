@@ -12,6 +12,16 @@ class RevertEdits<T extends DataObject> {
     this.currentData = { ...initialData }
   }
 
+  // ADDED: for UI button hide
+  canUndo(): boolean {
+    return this.history.length > 0
+  }
+
+  // ADDED: for UI button hide
+  canRedo(): boolean {
+    return this.future.length > 0
+  }
+
   /**
    * Updates the current data with new values.
    * Automatically pushes the previous state to the undo stack.

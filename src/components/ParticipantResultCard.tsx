@@ -21,10 +21,10 @@ export function ParticipantResultCard({ participants }: Props) {
   const selected = participants.find(vm => vm.id === selectedId)
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4 shadow space-y-4">
+    <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-4 shadow space-y-4">
       <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Participant Total Event Time</h2>
 
-      {/* Search + Dropdown side by side */}
+      {/* Search + Dropdown */}
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search input with live results */}
         <div className="w-full md:w-1/2">
@@ -61,7 +61,7 @@ export function ParticipantResultCard({ participants }: Props) {
           )}
         </div>
 
-        {/* Always-visible dropdown selector */}
+        {/* Dropdown selector */}
         <div className="w-full md:w-1/2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Select participant
@@ -85,7 +85,7 @@ export function ParticipantResultCard({ participants }: Props) {
       {selected && (
         <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 p-3 rounded">
           <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-            Total Time for <strong>{selected.fullName}</strong>:
+            Total Time for <span className="font-bold">{selected.fullName}</span>:
           </p>
           <p className="text-lg font-mono text-blue-900 dark:text-blue-200">{selected.getTotalTime()}</p>
         </div>

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Race } from '../models/race'
 import { Participant } from '../models/participant'
-import { createParticipantViewModel } from './participantViewModel'
+import { createParticipantViewModel, type ParticipantViewModel } from './participantViewModel'
 import { RaceType } from '../types/raceType'
 import { TimeUtils } from '../utils/timeUtils'
 
 export type RaceViewModel = ReturnType<typeof useRaceViewModel>
 
-// Pure function — no hooks
+// Function — no hooks
 export function createRaceViewModel(race: Race) {
   return {
     id: race.id,
@@ -32,11 +32,18 @@ export function createRaceViewModel(race: Race) {
         return order === 'best' ? timeA - timeB : timeB - timeA
       })
     },
+    addParticipantToRace: (participantVM: ParticipantViewModel) => {
+      race.addParticipant(participantVM.getModel())
+    },
+    removeParticipantFromRace: (participantId: string) => {
+      race.deleteParticipant(participantId)
+    },
+    hasParticipants: () => race.participants.length > 0,
     getModel: () => race
   }
 }
 
-// Hook — to be used inside React components
+// Hook
 export function useRaceViewModel(race: Race) {
   const [_, forceUpdate] = useState(0)
   const vm = createRaceViewModel(race)
@@ -66,6 +73,16 @@ export function useRaceViewModel(race: Race) {
       vm.onResultAdded()
       forceUpdate(v => v + 1)
     },
-    getModel: vm.getModel
+    getModel: vm.getModel,
+
+    addParticipantToRace: (participantVM: ParticipantViewModel) => {
+      vm.addParticipantToRace(participantVM)
+      forceUpdate(v => v + 1)
+    },
+    removeParticipantFromRace: (participantId: string) => {
+      vm.removeParticipantFromRace(participantId)
+      forceUpdate(v => v + 1)
+    },
+    hasParticipants: vm.hasParticipants,
   }
 }

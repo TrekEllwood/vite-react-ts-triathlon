@@ -1,4 +1,4 @@
-import type { RaceType } from '../types/raceType'
+import { RaceType } from '../types/raceType'
 import { TimeUtils } from '../utils/timeUtils'
 
 export class Results {

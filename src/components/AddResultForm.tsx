@@ -10,9 +10,9 @@ export function AddResultForm({
   raceType: RaceType
   onAdd: () => void
 }) {
-  const [hours, setHours] = useState('')
-  const [minutes, setMinutes] = useState('')
-  const [seconds, setSeconds] = useState('')
+  const [hours, setHours] = useState('0')
+  const [minutes, setMinutes] = useState('0')
+  const [seconds, setSeconds] = useState('0')
   const [position, setPosition] = useState(1)
 
   const isValidTime = () => {
@@ -37,9 +37,9 @@ export function AddResultForm({
     addResult(raceType, hours, minutes, seconds, position)
     onAdd()
 
-    setHours('')
-    setMinutes('')
-    setSeconds('')
+    setHours('0')
+    setMinutes('0')
+    setSeconds('0')
     setPosition(1)
   }
 

@@ -39,29 +39,29 @@ export class Participant {
 
   // UPDATED: to only allow single result object
   addResult(raceTimes: Partial<Record<RaceType, string>>, position: number): void {
-  for (const [, value] of Object.entries(raceTimes)) {
-    if (!ValidationService.isValidTimeFormat(value)) {
-      ErrorHandler.throwInvalidTimeFormat()
+    for (const [, value] of Object.entries(raceTimes)) {
+      if (!ValidationService.isValidTimeFormat(value)) {
+        ErrorHandler.throwInvalidTimeFormat()
+      }
+    }
+
+    const splitTimes = this.convertRaceTimes(raceTimes)
+
+    let result: Results
+
+    if (this.results.length === 0) {
+      result = new Results(splitTimes, position)
+      this.results.push(result)
+    } else {
+      result = this.results[0]
+      result.splitTimes = {
+        ...result.splitTimes,
+        ...splitTimes // Overwrite old race type time
+      }
+      result.position = position
+      result.updateFinishTime()
     }
   }
-
-  const splitTimes = this.convertRaceTimes(raceTimes)
-
-  let result: Results
-
-  if (this.results.length === 0) {
-    result = new Results(splitTimes, position)
-    this.results.push(result)
-  } else {
-    result = this.results[0]
-    result.splitTimes = {
-      ...result.splitTimes,
-      ...splitTimes // Overwrite old race type time
-    }
-    result.position = position
-    result.updateFinishTime()
-  }
-}
 
   getTotalTime(): string {
     if (this.results.length === 0) return '00:00:00'

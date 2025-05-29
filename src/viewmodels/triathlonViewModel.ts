@@ -4,63 +4,78 @@ import { Race } from '../models/race'
 import { Participant } from '../models/participant'
 import { RaceType } from '../types/raceType'
 import { createRaceViewModel } from './raceViewModel'
-import { createParticipantViewModel } from './participantViewModel'
+import { createParticipantViewModel, createParticipantViewModelFromData } from './participantViewModel'
 import { StorageService } from '../utils/database/storageService'
 import { TriathlonSerialiser } from '../utils/database/triathlonSerialiser'
 import type { TriathlonDTO } from '../utils/database/triathlonSerialiser'
+import { v4 as uuidv4 } from 'uuid'
+import RevertEdits from '../utils/revertEdits'
 
 export function useTriathlonViewModel() {
+  const [editor, setEditor] = useState<RevertEdits<TriathlonDTO> | null>(null)
   const [triathlon, setTriathlon] = useState<Triathlon | null>(null)
   const [version, setVersion] = useState(0)
 
+  const canUndo = editor?.canUndo() ?? false
+  const canRedo = editor?.canRedo() ?? false
+
   useEffect(() => {
     const load = async () => {
-      // const dto = await StorageService.getFromIndexedDB<TriathlonDTO>('triathlon-1')
       let dto = await StorageService.getFromLocalStorage<TriathlonDTO>('triathlon-1')
       if (!dto) {
         dto = await StorageService.getFromIndexedDB<TriathlonDTO>('triathlon-1')
       }
 
-      if (dto) {
-        setTriathlon(TriathlonSerialiser.deserialise(dto))
-      } else {
+      if (!dto) {
         const newTriathlon = createDefaultTriathlon()
-        const serialised = TriathlonSerialiser.serialise(newTriathlon)
-        
-        // await StorageService.saveToIndexedDB('triathlon-1', TriathlonSerialiser.serialise(newTriathlon))
-        await StorageService.saveToLocalStorage('triathlon-1', serialised)
-        await StorageService.saveToIndexedDB('triathlon-1', serialised)
-
-        setTriathlon(newTriathlon)
+        dto = TriathlonSerialiser.serialise(newTriathlon)
+        await StorageService.saveToLocalStorage('triathlon-1', dto)
+        await StorageService.saveToIndexedDB('triathlon-1', dto)
       }
+
+      setEditor(new RevertEdits(dto))
+      setTriathlon(TriathlonSerialiser.deserialise(dto))
     }
+
     load()
   }, [])
 
   const forceUpdate = () => setVersion(v => v + 1)
 
   const persist = async () => {
-    if (!triathlon) return
-    const dto = TriathlonSerialiser.serialise(triathlon)
+    if (!editor) return
+    const dto = editor.getCurrentData()
     await StorageService.saveToLocalStorage('triathlon-1', dto)
     await StorageService.saveToIndexedDB('triathlon-1', dto)
+  }
+
+  const commit = () => {
+    if (!editor || !triathlon) return
+    editor.update(TriathlonSerialiser.serialise(triathlon))
+    persist()
+    forceUpdate()
+  }
+
+  const refreshFromEditor = () => {
+    if (!editor) return
+    const updated = TriathlonSerialiser.deserialise(editor.getCurrentData())
+    setTriathlon(updated)
+    forceUpdate()
   }
 
   const addRace = (race: Race) => {
     if (!triathlon) return
     triathlon.addRace(race)
-    persist()
-    forceUpdate()
+    commit()
   }
 
   const deleteRace = (raceId: string) => {
     if (!triathlon) return
     triathlon.deleteRace(raceId)
-    persist()
-    forceUpdate()
+    commit()
   }
 
-  const addOrUpdateParticipant = (updatedVM: ReturnType<typeof createParticipantViewModel>) => {
+  const addParticipantIfNotExists = (updatedVM: ReturnType<typeof createParticipantViewModel>) => {
     if (!triathlon) return
     const updated = updatedVM.getModel()
     const race = triathlon.getAllRaces().find(r => r.id === updated.raceId)
@@ -68,61 +83,146 @@ export function useTriathlonViewModel() {
       const exists = race.participants.find(p => p.id === updated.id)
       if (!exists) {
         race.addParticipant(updated)
-        persist()
-        forceUpdate()
+        commit()
       }
     }
   }
 
-  const racesVM = useMemo(
+  const addRaceByDetails = (name: string, type: RaceType) => {
+    if (!triathlon) return
+    const race = new Race(uuidv4(), triathlon.id, name, type)
+    triathlon.addRace(race)
+    commit()
+  }
+
+  const addParticipantByDetails = (
+    raceId: string,
+    firstName: string,
+    lastName: string,
+    bibNumber?: number
+  ) => {
+    if (!triathlon) return
+
+  const participantVM = createParticipantViewModelFromData(
+    uuidv4(),
+    raceId,
+    firstName,
+    lastName,
+    bibNumber
+  )
+
+  const race = triathlon.getAllRaces().find(r => r.id === raceId)
+    if (race) {
+      race.addParticipant(participantVM.getModel())
+      commit()
+    }
+  }
+
+  const clearRaceTime = (participantId: string, raceType: RaceType) => {
+    if (!triathlon) return
+
+    const participant = triathlon.getAllParticipants().find(p => p.id === participantId)
+    if (!participant) return
+
+    const result = participant.results[0]
+    if (result?.splitTimes?.[raceType] != null) {
+      result.splitTimes = {
+        ...result.splitTimes,
+        [raceType]: 0,
+      }
+      result.updateFinishTime?.()
+    }
+    
+    const race = triathlon.getAllRaces().find(r => r.type === raceType)
+    race?.deleteParticipant(participantId)
+    commit()
+  }
+
+  const undo = () => {
+    editor?.undo()
+    refreshFromEditor()
+  }
+
+  const redo = () => {
+    editor?.redo()
+    refreshFromEditor()
+  }
+
+  const revert = () => {
+    editor?.revert()
+    refreshFromEditor()
+    persist()
+  }
+
+  const races = useMemo(
     () => triathlon?.getAllRaces().map(createRaceViewModel) ?? [],
     [triathlon, version]
   )
 
-  const participantsVM = useMemo(
+  const participants = useMemo(
     () => triathlon?.getAllParticipants().map(createParticipantViewModel) ?? [],
     [triathlon, version]
   )
 
   const averageTime = useMemo(
-    () => triathlon?.calculateAverageTimeForEvent() ?? 'N/A',
-    [triathlon, version]
-  )
+  () => triathlon?.calculateAverageTimeForEvent() ?? 'N/A',
+  [triathlon, version]
+)
 
   return {
-    triathlon: triathlon
-      ? {
-          name: triathlon.name,
-          location: triathlon.location,
-        }
-      : null,
-    races: racesVM,
-    participants: participantsVM,
-    // averageTime: triathlon?.calculateAverageTimeForEvent() ?? 'N/A',
+    triathlon,
+    races: races,
+    participants: participants,
     averageTime,
     addRace,
     deleteRace,
-    addOrUpdateParticipant,
+    addOrUpdateParticipant: addParticipantIfNotExists,
+    addRaceByDetails,
+    addParticipantByDetails,
+    clearRaceTime,
+    undo,
+    redo,
+    revert,
+    canUndo,
+    canRedo,
+    commit,
     persist,
+    forceUpdate,
   }
 }
 
+// Hardcoded testing data
 function createDefaultTriathlon(): Triathlon {
-  const triathlon = new Triathlon('1', 'Ironman', new Date(), 'NZ')
+  const triathlonId = '1'
+  const triathlon = new Triathlon(triathlonId, 'Ironman', new Date(), 'NZ')
 
-  const swim = new Race('r1', '1', 'Swim Sprint', RaceType.SWIM)
-  const bike = new Race('r2', '1', 'Bike Course', RaceType.BIKE)
+  const swimId = 'r1'
+  const bikeId = 'r2'
 
-  const p1 = new Participant('p1', swim.id, 'Alice', 'Smith')
-  const p2 = new Participant('p2', swim.id, 'Bob', 'Johnson')
-
-  swim.addParticipant(p1)
-  swim.addParticipant(p2)
-  bike.addParticipant(p1)
-  bike.addParticipant(p2)
-
+  const swim = new Race(swimId, triathlonId, 'Swim Sprint', RaceType.SWIM)
+  const bike = new Race(bikeId, triathlonId, 'Bike Course', RaceType.BIKE)
+  
   triathlon.addRace(swim)
   triathlon.addRace(bike)
+  
+  const aliceId = 'p1'
+  const bobId = 'p2'
+  const aliceFirst = 'Alice'
+  const aliceLast = 'Wonderland'
+  const kyloFirst = 'Kylo'
+  const kyloLast = 'Ren'
+  
+  const alice = new Participant(aliceId, swimId, aliceFirst, aliceLast)
+  const kylo = new Participant(bobId, swimId, kyloFirst, kyloLast)
+  
+  swim.addParticipant(alice)
+  swim.addParticipant(kylo)
+  
+  const aliceInBike = new Participant(aliceId, bikeId, aliceFirst, aliceLast)
+  const kyloInBike = new Participant(bobId, bikeId, kyloFirst, kyloLast)
+  
+  bike.addParticipant(aliceInBike)
+  bike.addParticipant(kyloInBike)
 
   return triathlon
 }

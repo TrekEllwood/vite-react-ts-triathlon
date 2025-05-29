@@ -28,7 +28,6 @@ export function ParticipantRaceCard({
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-3 space-y-2">
       <h3 className="text-md font-semibold text-gray-700 dark:text-white">{participant.fullName}</h3>
-      {/* <p className="text-sm text-gray-500 dark:text-gray-300">Total Time: {participant.getTotalTime()}</p> */}
 
       <AddResultForm
         raceType={raceType}

@@ -51,10 +51,18 @@ export class TriathlonSerialiser {
     }
   }
 
+  // CHANGE: to correct participant deserialisation
   static deserialise(data: TriathlonDTO): Triathlon {
     const triathlon = new Triathlon(data.id, data.name, new Date(data.date), data.location)
     triathlon.isFollowed = data.isFollowed
-    triathlon.races = data.races.map(raceData => TriathlonSerialiser.mapDTOToRace(raceData))
+    // triathlon.races = data.races.map(raceData => TriathlonSerialiser.mapDTOToRace(raceData))
+    
+    const participantMap = this.buildSharedParticipantMap(data.races)
+
+    triathlon.races = data.races.map(raceData =>
+      this.rebuildRaceFromDTO(raceData, participantMap)
+    )
+
     return triathlon
   }
 
@@ -93,14 +101,15 @@ export class TriathlonSerialiser {
     }
   }
 
-  private static mapDTOToRace(raceData: RaceDTO): Race {
-    const race = new Race(raceData.id, raceData.triathlonId, raceData.name, raceData.type)
-    race.isFollowed = raceData.isFollowed
-    race.participants = raceData.participants.map(participantData =>
-      TriathlonSerialiser.mapDTOToParticipant(participantData)
-    )
-    return race
-  }
+  // DELETED: becasue moved to inline .deserialise()
+  // private static mapDTOToRace(raceData: RaceDTO): Race {
+  //   const race = new Race(raceData.id, raceData.triathlonId, raceData.name, raceData.type)
+  //   race.isFollowed = raceData.isFollowed
+  //   race.participants = raceData.participants.map(participantData =>
+  //     TriathlonSerialiser.mapDTOToParticipant(participantData)
+  //   )
+  //   return race
+  // }
 
   private static mapDTOToParticipant(participantData: ParticipantDTO): Participant {
     const participant = new Participant(
@@ -124,10 +133,43 @@ export class TriathlonSerialiser {
         splitTimes[key] = val
       }
     }
-    return new Results(splitTimes, resultData.position)
+    // return new Results(splitTimes, resultData.position)
+    // CHANGE: becasue finishTime was never restored
+    const result = new Results(splitTimes, resultData.position)
+    result.finishTime = resultData.finishTime
+    return result
   }
 
   private static isRaceType(value: string): value is RaceType {
     return Object.values(RaceType).includes(value as RaceType)
+  }
+
+  // NEW: helper method
+  private static buildSharedParticipantMap(races: RaceDTO[]): Map<string, Participant> {
+    const map = new Map<string, Participant>()
+    for (const race of races) {
+      for (const pDTO of race.participants) {
+        if (!map.has(pDTO.id)) {
+          map.set(pDTO.id, this.mapDTOToParticipant(pDTO))
+        }
+      }
+    }
+    return map
+  }
+
+  // NEW: helper method
+  private static rebuildRaceFromDTO(raceData: RaceDTO, participantMap: Map<string, Participant>): Race {
+    const race = new Race(raceData.id, raceData.triathlonId, raceData.name, raceData.type)
+    race.isFollowed = raceData.isFollowed
+
+    race.participants = raceData.participants.map(pDTO => {
+      const participant = participantMap.get(pDTO.id)
+      if (!participant) {
+        throw new Error(`Missing shared participant for ID: ${pDTO.id}`)
+      }
+      return participant
+    })
+
+    return race
   }
 }

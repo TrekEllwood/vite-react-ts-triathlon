@@ -49,6 +49,11 @@ export class Triathlon {
     return Array.from(seen.values())
   }
 
+  // ADDED: to make a cleaner way to access derived value
+  get averageTime(): string | null {
+    return this.calculateAverageTimeForEvent()
+  }
+
   // Used to determine average event time, could be displayed in desc order of shortest events
   calculateAverageTimeForEvent(): string | null {
     const allTimes: number[] = []
@@ -57,7 +62,9 @@ export class Triathlon {
       const averageTime = race.calculateAverageTime()
       if (averageTime) {
         const parsedTime = TimeUtils.parseTime(averageTime)
-        if (parsedTime !== null) allTimes.push(parsedTime)
+        if (parsedTime !== null && parsedTime > 0) { // CHANGED: parsed > 0 to filter out 0 or invalid durations
+          allTimes.push(parsedTime)
+        }
       }
     })
 

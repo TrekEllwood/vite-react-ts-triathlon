@@ -5,16 +5,18 @@ import { createParticipantViewModelFromData } from '../viewmodels/participantVie
 import type { ParticipantViewModel } from '../viewmodels/participantViewModel'
 
 type ParticipantManagerProps = {
+  raceId: string
   raceType: RaceType
   participants: ParticipantViewModel[]
   raceParticipantIds: string[]
   onParticipantUpdate: (updated: ParticipantViewModel) => void
   onParticipantDelete?: (id: string) => void
   onAddToRace?: (participant: ParticipantViewModel) => void
+  onAddNewParticipant: (first: string, last: string, bib?: number) => void
 }
 
 export function ParticipantManager({
-  raceType,
+  raceId,
   participants,
   raceParticipantIds,
   onParticipantUpdate,
@@ -34,7 +36,7 @@ export function ParticipantManager({
 
     const participantVM = createParticipantViewModelFromData(
       uuidv4(),
-      `race-${raceType.toLowerCase()}`,
+      raceId,
       firstName.trim(),
       lastName.trim(),
       typeof bibNumber === 'number' ? bibNumber : undefined
@@ -47,29 +49,13 @@ export function ParticipantManager({
     setBibNumber('')
   }
 
-  // const handleDeleteParticipant = () => {
-  //   if (selectedId && onParticipantDelete) {
-  //     onParticipantDelete(selectedId)
-  //     setSelectedId('')
-  //   }
-  // }
-
-  // const handleAddExistingToRace = () => {
-  //   const participant = participants.find(p => p.id === selectedId)
-  //   if (participant && onAddToRace) {
-  //     onAddToRace(participant)
-  //     setSelectedId('')
-  //   }
-  // }
-
   const selectedParticipant = participants.find(p => p.id === selectedId)
   const isInRace = selectedParticipant ? raceParticipantIds.includes(selectedParticipant.id) : false
 
   return (
     <div className="space-y-6">
-
       {/* Create new participant */}
-      <div className="space-y-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-4">
+      <div className="space-y-4 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-4">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-white">
           Create New Participant
         </h2>
@@ -102,12 +88,12 @@ export function ParticipantManager({
           onClick={handleCreateParticipant}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
-          Create and Select
+          Create
         </button>
       </div>
 
       {/* Manage existing participants */}
-      <div className="space-y-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-4">
+      <div className="space-y-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded p-4">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-white">Manage Existing Participants</h2>
         <select
           value={selectedId}
@@ -143,7 +129,7 @@ export function ParticipantManager({
               className={`text-sm px-3 py-1 rounded transition ${
                 !isInRace
                   ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-red-900 text-white hover:bg-red-600'
               }`}
             >
               Remove from Race
