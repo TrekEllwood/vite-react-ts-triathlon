@@ -49,6 +49,17 @@ export class Triathlon {
     return Array.from(seen.values())
   }
 
+  // ADDED: to remove a participant from all races
+  deleteParticipant(participantId: string): void {
+    for (const race of this.races) {
+      race.deleteParticipant(participantId)
+    }
+  }
+
+  // Also remove the participant from the top-level participant list if you maintain one
+  // If participants are only tracked via races, this loop above is enough
+
+
   // ADDED: to make a cleaner way to access derived value
   get averageTime(): string | null {
     return this.calculateAverageTimeForEvent()

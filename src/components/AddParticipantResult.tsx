@@ -4,6 +4,7 @@ import { RaceType } from '../types/raceType'
 import { AddResultForm } from './AddResultForm'
 import { createParticipantViewModelFromData } from '../viewmodels/participantViewModel'
 import type { ParticipantViewModel } from '../viewmodels/participantViewModel'
+import { ErrorHandler } from '../utils/errorHandler'
 
 type AddParticipantResultProps = {
   participants: ParticipantViewModel[]
@@ -25,7 +26,7 @@ export function AddParticipantResult({
 
   const handleCreate = () => {
     if (!newFirst.trim() || !newLast.trim()) {
-      alert('First and last name required.')
+      ErrorHandler.showUserError('First and last name required.')
       return
     }
 

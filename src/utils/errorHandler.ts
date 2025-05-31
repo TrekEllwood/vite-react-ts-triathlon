@@ -23,6 +23,13 @@ export class ErrorHandler {
     throw new Error('Duplicate race ID.')
   }
 
+  // ADDED: Simple UI error without context or throwing
+  static showUserError(message: string): void {
+    if (this.errorDisplayFn) {
+      this.errorDisplayFn(message)
+    }
+  }
+
   /**
    * Handles unexpected errors, optionally displaying a user-friendly message.
    * Then throws a detailed error for logging/debugging purposes.

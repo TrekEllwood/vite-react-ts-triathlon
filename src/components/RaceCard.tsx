@@ -7,9 +7,10 @@ interface RaceCardProps {
   race: RaceViewModel
   commit: () => void
   persist: () => void
+  onGlobalResultAdded?: () => void
 }
 
-export function RaceCard({ race, commit, persist }: RaceCardProps) {
+export function RaceCard({ race, commit, persist, onGlobalResultAdded }: RaceCardProps) {
   const {
     name,
     type,
@@ -45,6 +46,7 @@ export function RaceCard({ race, commit, persist }: RaceCardProps) {
     commit()
     persist()
     onResultAdded()
+    onGlobalResultAdded?.()
     refreshParticipants()
   }
 

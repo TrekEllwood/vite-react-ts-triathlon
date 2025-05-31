@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { RaceType } from '../types/raceType'
-import { createParticipantViewModelFromData } from '../viewmodels/participantViewModel'
-import type { ParticipantViewModel } from '../viewmodels/participantViewModel'
+import { createParticipantViewModelFromData, type ParticipantViewModel } from '../viewmodels/participantViewModel'
+import { ErrorHandler } from '../utils/errorHandler'
+import { toast } from 'sonner'
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@radix-ui/react-dialog'
+import { DialogFooter, DialogHeader } from './ui/dialog'
+import { Button } from './ui/button'
 
 type ParticipantManagerProps = {
   raceId: string
@@ -11,6 +15,7 @@ type ParticipantManagerProps = {
   raceParticipantIds: string[]
   onParticipantUpdate: (updated: ParticipantViewModel) => void
   onParticipantDelete?: (id: string) => void
+  onParticipantDeleteEverywhere?: (id: string) => void
   onAddToRace?: (participant: ParticipantViewModel) => void
   onAddNewParticipant: (first: string, last: string, bib?: number) => void
 }
@@ -21,6 +26,7 @@ export function ParticipantManager({
   raceParticipantIds,
   onParticipantUpdate,
   onParticipantDelete,
+  onParticipantDeleteEverywhere,
   onAddToRace,
 }: ParticipantManagerProps) {
   const [firstName, setFirstName] = useState('')
@@ -30,7 +36,7 @@ export function ParticipantManager({
 
   const handleCreateParticipant = () => {
     if (!firstName.trim() || !lastName.trim()) {
-      alert('First and last name are required.')
+      ErrorHandler.showUserError('First and last name are required.')
       return
     }
 
@@ -43,6 +49,7 @@ export function ParticipantManager({
     )
 
     onParticipantUpdate(participantVM)
+    toast.success('New participant added successfully!')
 
     setFirstName('')
     setLastName('')
@@ -64,14 +71,24 @@ export function ParticipantManager({
             type="text"
             placeholder="First Name"
             value={firstName}
-            onChange={e => setFirstName(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              if (!/\d/.test(value)) {
+                setFirstName(value)
+              }
+            }}
             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded"
           />
           <input
             type="text"
             placeholder="Last Name"
             value={lastName}
-            onChange={e => setLastName(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              if (!/\d/.test(value)) {
+                setLastName(value)
+              }
+            }}
             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 p-2 rounded"
           />
           <input
@@ -109,31 +126,76 @@ export function ParticipantManager({
         </select>
 
         {selectedParticipant && (
-          <div className="flex flex-wrap gap-4 mt-2 items-center">
-            <button
-              onClick={() => onAddToRace?.(selectedParticipant)}
-              disabled={isInRace}
-              title={isInRace ? 'Already in race' : 'Add participant to this race'}
-              className={`text-sm px-3 py-1 rounded transition ${
-                isInRace
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              Add to Race
-            </button>
-            <button
-              onClick={() => onParticipantDelete?.(selectedParticipant.id)}
-              disabled={!isInRace}
-              title={!isInRace ? 'Not in this race' : 'Remove participant from this race'}
-              className={`text-sm px-3 py-1 rounded transition ${
-                !isInRace
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-red-900 text-white hover:bg-red-600'
-              }`}
-            >
-              Remove from Race
-            </button>
+          <div className="flex justify-between items-center mt-2 flex-wrap gap-4">
+            {/* Left group: Add / Remove buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => onAddToRace?.(selectedParticipant)}
+                disabled={isInRace}
+                title={isInRace ? 'Already in race' : 'Add participant to this race'}
+                className={`text-sm px-3 py-1 rounded transition ${
+                  isInRace
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                Add to Race
+              </button>
+
+              <button
+                onClick={() => onParticipantDelete?.(selectedParticipant.id)}
+                disabled={!isInRace}
+                title={!isInRace ? 'Not in this race' : 'Remove participant from this race'}
+                className={`text-sm px-3 py-1 rounded transition ${
+                  !isInRace
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : 'bg-red-900 text-white hover:bg-red-600'
+                }`}
+              >
+                Remove from Race
+              </button>
+            </div>
+
+            <div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    className="text-sm px-3 py-1 text-gray-700 dark:text-gray-300 hover:text-red-500"
+                  >
+                    Delete Participant
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                  </DialogHeader>
+                  <p className="mb-2 text-sm text-gray-600 dark:text-gray-300">
+                    This will permanently delete <strong>{selectedParticipant.fullName}</strong> from all races and event.
+                  </p>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        variant="destructive"
+                        className="px-3 py-1 h-7 text-sm text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      variant="destructive"
+                      className="px-3 py-1 h-7 text-sm rounded bg-red-900 text-white hover:bg-red-600"
+                      onClick={() => {
+                        onParticipantDeleteEverywhere?.(selectedParticipant.id)
+                        setSelectedId('')
+                      }}
+                    >
+                      Confirm Delete
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         )}
       </div>

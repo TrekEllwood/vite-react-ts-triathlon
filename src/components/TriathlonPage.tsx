@@ -6,12 +6,18 @@ import { ParticipantManager } from '../components/ParticipantManager'
 import { ParticipantResultCard } from './ParticipantResultCard'
 import { RaceType } from '../types/raceType'
 import { ParticipantRaceMatrixTable } from './ParticipantRaceMatrixTable'
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from '@radix-ui/react-dialog'
+import { Button } from './ui/button'
+import { DialogFooter, DialogHeader } from './ui/dialog'
+import { ErrorHandler } from '@/utils/errorHandler'
+import { toast } from 'sonner'
 
 export function TriathlonPage() {
   const [raceVersion, setRaceVersion] = useState(0)
   const [selectedRaceType, setSelectedRaceType] = useState<RaceType | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [matrixSortMode, setMatrixSortMode] = useState<'none' | 'best' | 'worst'>('none')
+  const [hasNewResults, setHasNewResults] = useState(false)
   
   const refreshRaceCards = () => setRaceVersion(v => v + 1)
 
@@ -22,6 +28,7 @@ export function TriathlonPage() {
     averageTime,
     deleteRace,
     addOrUpdateParticipant,
+    deleteParticipant,
     addRaceByDetails,
     addParticipantByDetails,
     clearRaceTime,
@@ -61,7 +68,24 @@ export function TriathlonPage() {
           }}
 
           onParticipantDelete={(id) => {
+            const participant = participants.find(p => p.id === id)
             clearRaceTime(id, selectedRaceType)
+            
+            if (participant) {
+              toast.info(`${participant.fullName} removed from ${race.name}`)
+            }
+
+            refreshRaceCards()
+          }}
+
+          onParticipantDeleteEverywhere={(id) => {
+            const participant = participants.find(p => p.id === id)
+            deleteParticipant(id)
+
+            if (participant) {
+              toast.warning(`${participant.fullName} removed from event`)
+            }
+
             refreshRaceCards()
           }}
 
@@ -69,6 +93,7 @@ export function TriathlonPage() {
             race.addParticipantToRace(participant)
             commit()
             persist()
+            toast.success(`${participant.fullName} added to ${race.name}`)
             refreshRaceCards()
           }}
 
@@ -84,7 +109,7 @@ export function TriathlonPage() {
   }
 
   return (
-    <div className="bg-gray-200 dark:bg-gray-900 min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-200 dark:bg-gray-900 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm p-4 space-y-8 bg-white dark:bg-gray-800">
         {/* Sticky Header */}
         <div className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -200,24 +225,57 @@ export function TriathlonPage() {
                 race={race}
                 commit={commit}
                 persist={persist}
+                onGlobalResultAdded={() => setHasNewResults(true)}
               />
-              <button
-                onClick={() => {
-                  if (race.hasParticipants()) {
-                    alert(`Cannot delete "${race.name}" — it still has participants.`)
-                    return
-                  }
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    onClick={(e) => {
+                      if (race.hasParticipants()) {
+                        e.preventDefault() // Prevents dialog from opening
+                        ErrorHandler.showUserError(
+                          `Cannot delete "${race.name}" — it still has participants.`
+                        )
+                      }
+                    }}
+                    className="absolute top-2 right-2 bg-red-900 text-white px-2 py-1 text-sm rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </DialogTrigger>
 
-                  if (window.confirm(`Delete race "${race.name}"?`)) {
-                    deleteRace(race.id)
-                    commit()
-                    setRaceVersion(v => v + 1)
-                  }
-                }}
-                className="absolute top-2 right-2 bg-red-900 text-white px-2 py-1 text-sm rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="py-1 px-3">Delete Race?</DialogTitle>
+                  </DialogHeader>
+                  <p className="mb-2 text-sm text-gray-600 dark:text-gray-300">
+                    Are you sure you want to delete <strong>{race.name}</strong> from the event?
+                  </p>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button
+                        variant="destructive"
+                        className="px-3 py-1 h-7 text-sm text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button
+                        variant="destructive"
+                        className="px-3 py-1 h-7 text-sm rounded bg-red-900 text-white hover:bg-red-600"
+                        onClick={() => {
+                          deleteRace(race.id)
+                          commit()
+                          setRaceVersion(v => v + 1)
+                        }}
+                      >
+                        Confirm Delete
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           ))}
         </div>
@@ -238,6 +296,8 @@ export function TriathlonPage() {
             races={races}
             sortMode={matrixSortMode}
             onSortModeChange={setMatrixSortMode}
+            hasNewResults={hasNewResults}
+            onClearNewResults={() => setHasNewResults(false)}
           />
         </section>
 

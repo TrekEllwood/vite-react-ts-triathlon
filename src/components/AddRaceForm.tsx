@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { RaceType } from '../types/raceType'
 import type { RaceViewModel } from '../viewmodels/raceViewModel'
+import { toast } from 'sonner'
 
 interface AddRaceFormProps {
   onAdd: (name: string, type: RaceType) => void
@@ -18,6 +19,7 @@ export function AddRaceForm({ onAdd, existingRaces }: AddRaceFormProps) {
     e.preventDefault()
     if (!name || !type) return
     onAdd(name, type as RaceType)
+    toast.success('New race added successfully!')
     setName('')
     setType('')
   }

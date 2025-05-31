@@ -3,6 +3,8 @@ import { ResultDisplay } from './ResultDisplay'
 import { AddResultForm } from './AddResultForm'
 import type { ParticipantViewModel } from '../viewmodels/participantViewModel'
 import { RaceType } from '../types/raceType'
+import { toast } from 'sonner'
+import { incrementAppBadge } from '@/utils/badgeUtils'
 
 type ParticipantRaceCardProps = {
   participant: ParticipantViewModel
@@ -20,6 +22,9 @@ export function ParticipantRaceCard({
   const handleAddResult = () => {
     forceUpdate()
     onResultAdded?.()
+    
+    incrementAppBadge()
+    toast.success(`${participant.fullName} result added successfully!`)
   }
 
   const hasResult = participant.hasResultForRaceType(raceType)

@@ -51,7 +51,9 @@ export function useTriathlonViewModel() {
 
   const commit = () => {
     if (!editor || !triathlon) return
-    editor.update(TriathlonSerialiser.serialise(triathlon))
+    const dto = TriathlonSerialiser.serialise(triathlon)
+    editor.update(dto)
+    setTriathlon(TriathlonSerialiser.deserialise(dto))
     persist()
     forceUpdate()
   }
@@ -61,6 +63,7 @@ export function useTriathlonViewModel() {
     const updated = TriathlonSerialiser.deserialise(editor.getCurrentData())
     setTriathlon(updated)
     forceUpdate()
+    persist()
   }
 
   const addRace = (race: Race) => {
@@ -86,6 +89,19 @@ export function useTriathlonViewModel() {
         commit()
       }
     }
+  }
+
+  const deleteParticipant = (participantId: string) => {
+    if (!triathlon) return
+
+    const races = triathlon.getAllRaces()
+    for (const race of races) {
+      race.deleteParticipant(participantId)
+    }
+
+    triathlon.deleteParticipant(participantId)
+
+    commit()
   }
 
   const addRaceByDetails = (name: string, type: RaceType) => {
@@ -151,7 +167,6 @@ export function useTriathlonViewModel() {
   const revert = () => {
     editor?.revert()
     refreshFromEditor()
-    persist()
   }
 
   const races = useMemo(
@@ -177,6 +192,7 @@ export function useTriathlonViewModel() {
     addRace,
     deleteRace,
     addOrUpdateParticipant: addParticipantIfNotExists,
+    deleteParticipant,
     addRaceByDetails,
     addParticipantByDetails,
     clearRaceTime,

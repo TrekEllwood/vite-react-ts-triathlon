@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RaceType } from '../types/raceType'
+import { ErrorHandler } from '../utils/errorHandler'
 
 export function AddResultForm({
   addResult,
@@ -30,7 +31,7 @@ export function AddResultForm({
     e.preventDefault()
 
     if (!isValidTime()) {
-      alert('Each time segment must be a number between 0 and 59.')
+      ErrorHandler.showUserError('Each time segment must be a number between 0 and 59.')
       return
     }
 
