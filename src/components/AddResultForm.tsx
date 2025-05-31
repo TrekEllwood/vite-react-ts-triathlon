@@ -20,9 +20,9 @@ export function AddResultForm({
     const m = parseInt(minutes || '0', 10)
     const s = parseInt(seconds || '0', 10)
     return (
-      !isNaN(h) && h >= 0 && h <= 60 &&
-      !isNaN(m) && m >= 0 && m <= 60 &&
-      !isNaN(s) && s >= 0 && s <= 60
+      !isNaN(h) && h >= 0 && h <= 59 &&
+      !isNaN(m) && m >= 0 && m <= 59 &&
+      !isNaN(s) && s >= 0 && s <= 59
     )
   }
 
@@ -30,7 +30,7 @@ export function AddResultForm({
     e.preventDefault()
 
     if (!isValidTime()) {
-      alert('Each time segment must be a number between 0 and 60.')
+      alert('Each time segment must be a number between 0 and 59.')
       return
     }
 
@@ -57,7 +57,7 @@ export function AddResultForm({
           onChange={e => {
             const raw = e.target.value
             const num = parseInt(raw, 10)
-            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 60)) {
+            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 59)) {
               setHours(raw)
             }
           }}
@@ -68,7 +68,7 @@ export function AddResultForm({
           }}
           className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 px-3 py-2 rounded"
           min="0"
-          max="60"
+          max="59"
           required
         />
 
@@ -80,7 +80,7 @@ export function AddResultForm({
           onChange={e => {
             const raw = e.target.value
             const num = parseInt(raw, 10)
-            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 60)) {
+            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 59)) {
               setMinutes(raw)
             }
           }}
@@ -91,7 +91,7 @@ export function AddResultForm({
           }}
           className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 px-3 py-2 rounded"
           min="0"
-          max="60"
+          max="59"
           required
         />
 
@@ -103,7 +103,7 @@ export function AddResultForm({
           onChange={e => {
             const raw = e.target.value
             const num = parseInt(raw, 10)
-            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 60)) {
+            if (raw === '' || (!isNaN(num) && num >= 0 && num <= 59)) {
               setSeconds(raw)
             }
           }}
@@ -114,7 +114,7 @@ export function AddResultForm({
           }}
           className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 px-3 py-2 rounded"
           min="0"
-          max="60"
+          max="59"
           required
         />
       </div>

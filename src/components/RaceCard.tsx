@@ -29,10 +29,6 @@ export function RaceCard({ race, commit, persist }: RaceCardProps) {
   }
 
   useEffect(() => {
-    setLocalParticipants(getParticipants())
-  }, [version])
-
-  useEffect(() => {
     const updated = getParticipants()
     setLocalParticipants(updated)
 

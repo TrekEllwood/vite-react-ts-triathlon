@@ -45,7 +45,7 @@ export function createRaceViewModel(race: Race) {
 
 // Hook
 export function useRaceViewModel(race: Race) {
-  const [_, forceUpdate] = useState(0)
+  const [, forceUpdate] = useState(0)
   const vm = createRaceViewModel(race)
 
   return {

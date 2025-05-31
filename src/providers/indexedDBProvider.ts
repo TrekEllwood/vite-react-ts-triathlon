@@ -48,7 +48,8 @@ export class IndexedDBProvider implements IStorageProvider {
   async get<T>(key: string): Promise<T | null> {
     const db = await this.openDB()
     const tx = db.transaction(this.storeName, 'readonly')
-    return await tx.objectStore(this.storeName).get(key) || null
+    // return await tx.objectStore(this.storeName).get(key) || null
+    return (await tx.objectStore(this.storeName).get(key)) ?? null
   }
 
   async delete(key: string): Promise<void> {

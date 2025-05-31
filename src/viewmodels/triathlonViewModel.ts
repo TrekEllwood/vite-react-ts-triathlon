@@ -14,7 +14,7 @@ import RevertEdits from '../utils/revertEdits'
 export function useTriathlonViewModel() {
   const [editor, setEditor] = useState<RevertEdits<TriathlonDTO> | null>(null)
   const [triathlon, setTriathlon] = useState<Triathlon | null>(null)
-  const [version, setVersion] = useState(0)
+  const [, setVersion] = useState(0)
 
   const canUndo = editor?.canUndo() ?? false
   const canRedo = editor?.canRedo() ?? false
@@ -156,17 +156,17 @@ export function useTriathlonViewModel() {
 
   const races = useMemo(
     () => triathlon?.getAllRaces().map(createRaceViewModel) ?? [],
-    [triathlon, version]
+    [triathlon]
   )
 
   const participants = useMemo(
     () => triathlon?.getAllParticipants().map(createParticipantViewModel) ?? [],
-    [triathlon, version]
+    [triathlon]
   )
 
   const averageTime = useMemo(
   () => triathlon?.calculateAverageTimeForEvent() ?? 'N/A',
-  [triathlon, version]
+  [triathlon]
 )
 
   return {

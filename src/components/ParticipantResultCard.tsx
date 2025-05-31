@@ -8,7 +8,7 @@ type Props = {
 export function ParticipantResultCard({ participants }: Props) {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [_, forceRender] = useState(0)
+  const [, forceRender] = useState(0)
 
   useEffect(() => {
     forceRender(n => n + 1)

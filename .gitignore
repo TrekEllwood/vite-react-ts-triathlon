@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Security
+localhost.key
+localhost.crt
+localhost.csr
+localhost.cnf
+security/

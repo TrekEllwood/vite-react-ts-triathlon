@@ -7,13 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "npx http-server dist -S -C .\\security\\localhost.crt -K .\\security\\localhost.key"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.7",
+    "http-server": "^14.1.1",
     "idb": "^8.0.3",
-    "mobx": "^6.13.7",
-    "mobx-react-lite": "^4.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwindcss": "^4.1.7",
