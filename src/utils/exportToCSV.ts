@@ -5,8 +5,20 @@ import { ErrorHandler } from './errorHandler'
 
 export function generateCSVFromParticipantRaceMatrix(
   participants: ParticipantViewModel[],
-  races: RaceViewModel[]
+  races: RaceViewModel[],
+  triathlonName?: string,
+  triathlonLocation?: string,
+  triathlonDate?: Date
 ): string {
+  const lines: string[] = []
+
+  if (triathlonName || triathlonLocation || triathlonDate) {
+    if (triathlonName) lines.push(`Event: ${triathlonName}`)
+    if (triathlonLocation) lines.push(`Location: ${triathlonLocation}`)
+    if (triathlonDate) lines.push(`Date: ${triathlonDate.toLocaleDateString('en-GB')}`)
+    lines.push('')
+  }
+
   const headers = ['Name', ...races.map(r => r.name)]
   const rows = participants.map(p => {
     const row = [p.fullName]
@@ -17,9 +29,10 @@ export function generateCSVFromParticipantRaceMatrix(
     return row
   })
 
-  return [headers, ...rows]
+  const tableLines = [headers, ...rows]
     .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
-    .join('\n')
+
+  return [...lines, ...tableLines].join('\n')
 }
 
 export async function saveCSVToFile(csvContent: string, suggestedName = 'participant-matrix.csv') {

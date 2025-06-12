@@ -3,7 +3,6 @@ import { Race } from '../models/race'
 import { Participant } from '../models/participant'
 import { createParticipantViewModel, type ParticipantViewModel } from './participantViewModel'
 import { RaceType } from '../types/raceType'
-import { TimeUtils } from '../utils/timeUtils'
 
 export type RaceViewModel = ReturnType<typeof useRaceViewModel>
 
@@ -23,14 +22,8 @@ export function createRaceViewModel(race: Race) {
     deleteParticipant: (participantId: string) => {
       race.deleteParticipant(participantId)
     },
-    sortParticipants: (order: 'best' | 'worst' = 'best') => {
-      race.participants.sort((a, b) => {
-        const timesA = a.results.map(r => TimeUtils.parseTime(r.finishTime)).filter(Boolean)
-        const timesB = b.results.map(r => TimeUtils.parseTime(r.finishTime)).filter(Boolean)
-        const timeA = order === 'best' ? Math.min(...timesA) : Math.max(...timesA)
-        const timeB = order === 'best' ? Math.min(...timesB) : Math.max(...timesB)
-        return order === 'best' ? timeA - timeB : timeB - timeA
-      })
+    sortParticipantsByTime: () => {
+      race.sortParticipantsByTime()
     },
     addParticipantToRace: (participantVM: ParticipantViewModel) => {
       race.addParticipant(participantVM.getModel())
@@ -65,8 +58,8 @@ export function useRaceViewModel(race: Race) {
       vm.deleteParticipant(participantId)
       forceUpdate(v => v + 1)
     },
-    sortParticipants: (order: 'best' | 'worst' = 'best') => {
-      vm.sortParticipants(order)
+    sortParticipantsByTime: () => {
+      vm.sortParticipantsByTime()
       forceUpdate(v => v + 1)
     },
     onResultAdded: () => {

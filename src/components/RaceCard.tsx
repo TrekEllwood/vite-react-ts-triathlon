@@ -30,6 +30,8 @@ export function RaceCard({ race, commit, persist, onGlobalResultAdded }: RaceCar
   }
 
   useEffect(() => {
+    race.sortParticipantsByTime()
+
     const updated = getParticipants()
     setLocalParticipants(updated)
 

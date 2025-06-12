@@ -52,12 +52,8 @@ export class Race {
 
   sortParticipantsByTime(): void {
     this.participants.sort((a, b) => {
-      const timeA = Math.min(
-        ...a.results.map(r => TimeUtils.parseTime(r.finishTime))
-      )
-      const timeB = Math.min(
-        ...b.results.map(r => TimeUtils.parseTime(r.finishTime))
-      )
+      const timeA = Math.min(...a.results.map(r => TimeUtils.parseTime(r.finishTime)))
+      const timeB = Math.min(...b.results.map(r => TimeUtils.parseTime(r.finishTime)))
       return timeA - timeB
     })
   }

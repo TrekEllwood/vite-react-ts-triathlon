@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { RaceType } from '../types/raceType'
 import { ErrorHandler } from '../utils/errorHandler'
+import { ValidationService } from '@/utils/validationService'
 
 export function AddResultForm({
   addResult,
@@ -16,21 +17,10 @@ export function AddResultForm({
   const [seconds, setSeconds] = useState('0')
   const [position, setPosition] = useState(1)
 
-  const isValidTime = () => {
-    const h = parseInt(hours || '0', 10)
-    const m = parseInt(minutes || '0', 10)
-    const s = parseInt(seconds || '0', 10)
-    return (
-      !isNaN(h) && h >= 0 && h <= 59 &&
-      !isNaN(m) && m >= 0 && m <= 59 &&
-      !isNaN(s) && s >= 0 && s <= 59
-    )
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!isValidTime()) {
+    if (!ValidationService.isValidTimeSegments(hours, minutes, seconds)) {
       ErrorHandler.showUserError('Each time segment must be a number between 0 and 59.')
       return
     }

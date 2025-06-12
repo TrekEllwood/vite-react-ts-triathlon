@@ -11,12 +11,13 @@ import { Button } from './ui/button'
 import { DialogFooter, DialogHeader } from './ui/dialog'
 import { ErrorHandler } from '@/utils/errorHandler'
 import { toast } from 'sonner'
+import { SortOrder } from '@/types/sortOrder'
 
 export function TriathlonPage() {
   const [raceVersion, setRaceVersion] = useState(0)
   const [selectedRaceType, setSelectedRaceType] = useState<RaceType | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [matrixSortMode, setMatrixSortMode] = useState<'none' | 'best' | 'worst'>('none')
+  const [matrixSortMode, setMatrixSortMode] = useState<SortOrder>(SortOrder.NONE)
   const [hasNewResults, setHasNewResults] = useState(false)
   
   const refreshRaceCards = () => setRaceVersion(v => v + 1)
@@ -121,7 +122,7 @@ export function TriathlonPage() {
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 Event Date:{" "}
-                <span className="font-semibold">{triathlon.date.toLocaleDateString()}</span>
+                <span className="font-semibold">{triathlon.date.toLocaleDateString('en-GB')}</span>
               </p>
             </div>
 
@@ -292,6 +293,9 @@ export function TriathlonPage() {
           </div>
 
           <ParticipantRaceMatrixTable
+            triathlonName={triathlon.name}
+            triathlonLocation={triathlon.location}
+            triathlonDate={triathlon.date}
             participants={participants}
             races={races}
             sortMode={matrixSortMode}

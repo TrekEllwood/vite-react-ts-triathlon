@@ -1,6 +1,7 @@
 import { Participant } from '../models/participant'
 import { TimeUtils } from '../utils/timeUtils'
 import { RaceType } from '../types/raceType'
+import { SortOrder } from '@/types/sortOrder'
 
 export type ParticipantViewModel = ReturnType<typeof createParticipantViewModel>
 
@@ -20,6 +21,13 @@ export function createParticipantViewModel(participant: Participant) {
       const result = participant.results.find(r => r.splitTimes[raceType] !== undefined)
       const seconds = result?.splitTimes?.[raceType]
       return seconds !== undefined ? TimeUtils.formatTime(seconds) : '—'
+    },
+
+    hasAllRaceResults: (raceTypes: RaceType[]): boolean => {
+      return raceTypes.every(type => {
+        const result = participant.results[0]?.splitTimes[type]
+        return typeof result === 'number' && result > 0
+      })
     },
 
     addResultForRaceType: (
@@ -53,3 +61,13 @@ export function createParticipantViewModelFromData(
   const model = new Participant(id, raceId, firstName, lastName, bibNumber)
   return createParticipantViewModel(model)
 }
+
+export function sortParticipantViewModelsByTotalTime(
+  viewModels: ParticipantViewModel[],
+  order: SortOrder = SortOrder.BEST
+): ParticipantViewModel[] {
+  const models = viewModels.map(vm => vm.getModel())
+  const sortedModels = Participant.sortByTotalTime(models, order)
+  return sortedModels.map(createParticipantViewModel)
+}
+

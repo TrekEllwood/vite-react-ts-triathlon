@@ -38,7 +38,7 @@ export class ErrorHandler {
    * @param key - A unique identifier related to the action (e.g., user ID, race ID).
    * @param error - The caught error or error message, if any.
    */
-  static handleErrorMsg(action: string, key: string, error?: unknown): void {
+  static handleErrorMsg(action: string, key: string, error?: unknown): never {
     const errorMessage = `Failed to ${action} data with key: ${key}.`
     
     // Call the display function if one is set.

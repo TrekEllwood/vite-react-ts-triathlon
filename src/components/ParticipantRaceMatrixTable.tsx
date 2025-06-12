@@ -1,19 +1,27 @@
 import { clearAppBadge } from '@/utils/badgeUtils'
 import { generateCSVFromParticipantRaceMatrix, saveCSVToFile } from '../utils/exportToCSV'
-import type { ParticipantViewModel } from '../viewmodels/participantViewModel'
+import { sortParticipantViewModelsByTotalTime, type ParticipantViewModel } from '../viewmodels/participantViewModel'
 import type { RaceViewModel } from '../viewmodels/raceViewModel'
 import { Bell, BellDot } from 'lucide-react'
+import { SortOrder } from '@/types/sortOrder'
+import { useState } from 'react'
 
 interface Props {
+  triathlonName: string
+  triathlonLocation: string
+  triathlonDate: Date
   participants: ParticipantViewModel[]
   races: RaceViewModel[]
-  sortMode: 'none' | 'best' | 'worst'
-  onSortModeChange: (mode: 'none' | 'best' | 'worst') => void
+  sortMode: SortOrder
+  onSortModeChange: (mode: SortOrder) => void
   hasNewResults: boolean
   onClearNewResults: () => void
 }
 
 export function ParticipantRaceMatrixTable({
+  triathlonName,
+  triathlonLocation,
+  triathlonDate,
   participants,
   races,
   sortMode,
@@ -21,20 +29,25 @@ export function ParticipantRaceMatrixTable({
   hasNewResults,
   onClearNewResults,
 }: Props) {
-  const sortedParticipants = [...participants]
+  const [showOnlyValid, setShowOnlyValid] = useState(false)
+  
+  const filteredParticipants = showOnlyValid
+    ? participants.filter(p => p.hasAllRaceResults(races.map(r => r.type)))
+    : participants
 
-  if (sortMode === 'best') {
-    sortedParticipants.sort((a, b) =>
-      a.getTotalTime() < b.getTotalTime() ? -1 : 1
-    )
-  } else if (sortMode === 'worst') {
-    sortedParticipants.sort((a, b) =>
-      a.getTotalTime() > b.getTotalTime() ? -1 : 1
-    )
-  }
+  const sortedParticipants =
+  sortMode === 'none'
+    ? filteredParticipants
+    : sortParticipantViewModelsByTotalTime(filteredParticipants, sortMode)
 
   return (
     <div className="overflow-x-auto mt-6">
+      <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">
+        <p><strong>Event:</strong> {triathlonName}</p>
+        <p><strong>Location:</strong> {triathlonLocation}</p>
+        <p><strong>Date:</strong> {triathlonDate.toLocaleDateString('en-GB')}</p>
+      </div>
+
       <div className="flex justify-between items-center mb-2">
         <button
           onClick={() => {
@@ -52,27 +65,47 @@ export function ParticipantRaceMatrixTable({
         </button>
 
         <div className="flex gap-2">
+          <label className="flex items-center gap-1 text-sm">
+            <input
+              type="checkbox"
+              checked={showOnlyValid}
+              onChange={() => setShowOnlyValid(prev => !prev)}
+              className="accent-green-600"
+            />
+            Show only complete results
+          </label>
+
           <button
             onClick={() => {
               onSortModeChange(
-                sortMode === 'none' ? 'best' : sortMode === 'best' ? 'worst' : 'none'
+                sortMode === SortOrder.NONE
+                  ? SortOrder.BEST
+                  : sortMode === SortOrder.BEST
+                  ? SortOrder.WORST
+                  : SortOrder.NONE
               )
             }}
             className="text-sm px-3 py-1 border rounded dark:border-gray-600 dark:text-gray-200 flex items-center gap-2"
           >
             <span>
-              {sortMode === 'none' && '⇅'}
-              {sortMode === 'best' && '↑'}
-              {sortMode === 'worst' && '↓'}
+              {sortMode === SortOrder.NONE && '⇅'}
+              {sortMode === SortOrder.BEST && '↑'}
+              {sortMode === SortOrder.WORST && '↓'}
             </span>
-            {sortMode === 'none'
+            {sortMode === SortOrder.NONE
               ? 'Unsorted'
-              : `Sorted by ${sortMode === 'best' ? 'Best Total' : 'Worst Total'}`}
+              : `Sorted by ${sortMode === SortOrder.BEST ? 'Best Total' : 'Worst Total'}`}
           </button>
 
           <button
             onClick={() => {
-              const csv = generateCSVFromParticipantRaceMatrix(participants, races)
+              const csv = generateCSVFromParticipantRaceMatrix(
+                participants,
+                races,
+                triathlonName,
+                triathlonLocation,
+                triathlonDate
+              )
               saveCSVToFile(csv)
             }}
             className="text-sm px-3 py-1 border rounded bg-green-600 text-white hover:bg-green-700"

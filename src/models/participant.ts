@@ -3,7 +3,7 @@ import { Results } from './results'
 import { TimeUtils } from '../utils/timeUtils'
 import { ValidationService } from '../utils/validationService'
 import { ErrorHandler } from '../utils/errorHandler'
-
+import { SortOrder } from '../types/sortOrder'
 
 export class Participant {
   id: string
@@ -72,6 +72,20 @@ export class Participant {
 
     return TimeUtils.formatTime(totalInSeconds)
   }
+
+  // ADDED: to sort table view
+  static sortByTotalTime(
+    participants: Participant[],
+    order: SortOrder = SortOrder.BEST
+  ): Participant[] {
+    return participants
+      .slice()
+      .sort((a, b) => {
+        const timeA = TimeUtils.parseTime(a.getTotalTime())
+        const timeB = TimeUtils.parseTime(b.getTotalTime())
+        return order === SortOrder.BEST ? timeA - timeB : timeB - timeA
+      })
+  }  
 
   updateFinishTime(): void {
     if (this.results.length > 0) {

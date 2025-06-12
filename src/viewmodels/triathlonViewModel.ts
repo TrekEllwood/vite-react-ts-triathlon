@@ -10,6 +10,7 @@ import { TriathlonSerialiser } from '../utils/database/triathlonSerialiser'
 import type { TriathlonDTO } from '../utils/database/triathlonSerialiser'
 import { v4 as uuidv4 } from 'uuid'
 import RevertEdits from '../utils/revertEdits'
+import { toast } from 'sonner'
 
 export function useTriathlonViewModel() {
   const [editor, setEditor] = useState<RevertEdits<TriathlonDTO> | null>(null)
@@ -31,6 +32,8 @@ export function useTriathlonViewModel() {
         dto = TriathlonSerialiser.serialise(newTriathlon)
         await StorageService.saveToLocalStorage('triathlon-1', dto)
         await StorageService.saveToIndexedDB('triathlon-1', dto)
+
+        toast.info('A new event database has been created.')
       }
 
       setEditor(new RevertEdits(dto))

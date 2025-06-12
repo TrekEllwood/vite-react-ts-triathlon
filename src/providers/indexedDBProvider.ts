@@ -1,3 +1,4 @@
+import { ErrorHandler } from '@/utils/errorHandler'
 import type { IStorageProvider } from '../types/interfaces/storageProvider'
 import { openDB, type IDBPDatabase } from 'idb'
 
@@ -85,12 +86,13 @@ export class IndexedDBProvider implements IStorageProvider {
       return this.db
     } catch (error) {
       if ((error as DOMException).name === 'InvalidStateError') {
+        ErrorHandler.showUserError('A database error occurred. Your local data has been reset.')
         console.warn('[IndexedDBProvider] DB invalid — resetting...')
         await this.deleteDatabase()
         this.db = await this.openAndUpgradeDB()
         return this.db
       }
-      throw error
+      throw ErrorHandler.handleErrorMsg('open database', this.storeName, error)
     }
   }
 
