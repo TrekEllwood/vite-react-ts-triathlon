@@ -28,4 +28,7 @@ localhost.key
 localhost.crt
 localhost.csr
 localhost.cnf
-security/
+security/*
+!security/.gitkeep
+
+
